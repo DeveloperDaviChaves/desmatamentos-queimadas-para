@@ -1,0 +1,49 @@
+LEIAME - DESMATAMENTO (PRODES / TerraBrasilis / INPE)
+======================================================
+
+FONTE
+  INPE - TerraBrasilis, projeto PRODES
+  Conjunto: "Incremento anual de desmatamento no Bioma Amazonia a partir de 2008"
+  Link do catalogo:
+  https://terrabrasilis.dpi.inpe.br/geonetwork/srv/eng/catalog.search#/metadata/b75b83db-8026-43f9-9537-ee1dfa308158
+
+DATA DO DOWNLOAD
+  13/10/226
+
+ARQUIVOS NESTA PASTA (devem ficar sempre juntos, com o mesmo nome base)
+  yearly_deforestation_amazonia_legal_v20260717 .shp  (geometria)
+  yearly_deforestation_amazonia_legal_v20260717 .shx  (indice)
+  yearly_deforestation_amazonia_legal_v20260717 .dbf  (tabela de atributos)
+  yearly_deforestation_amazonia_legal_v20260717 .prj  (sistema de coordenadas)
+
+DESCRICAO DO CONJUNTO (resumo da pagina do catalogo)
+  - Area desmatada a partir de 2008, separada por ano e recortada pelos
+    limites do bioma Amazonia.
+  - Mapeamento feito com imagens do satelite Landsat ou similares.
+  - Registra areas desmatadas maiores que 6,25 hectares.
+  - O PRODES considera desmatamento a supressao da vegetacao nativa,
+    independentemente do uso futuro da area.
+  - Os limites do bioma seguem a publicacao do IBGE de 30/10/2019.
+
+COBERTURA
+  Bioma Amazonia inteiro (varios estados), nao apenas o Para.
+  O filtro do Para sera aplicado na etapa de limpeza (camada stg).
+  Periodo coberto: [PREENCHER apos a inspecao]
+  Sistema de coordenadas: [PREENCHER apos a inspecao: ver gdf.crs ou .prj]
+
+COLUNAS (atributos)
+  [PREENCHER apos a inspecao: gdf.columns]
+  A lista oficial dos atributos esta na pagina do catalogo, na secao
+  "Descricao dos atributos". Copie para ca.
+
+LIMITACOES PARA A ANALISE
+  - Detecta apenas desmatamento acima de 6,25 hectares.
+  - O recorte e o bioma Amazonia, que nao coincide com a divisa do Para.
+  - Os dados sao poligonos, nao municipios: comparar por municipio exige
+    cruzamento espacial com a malha municipal do IBGE.
+  - O desmatamento mede area (km2); as queimadas medem focos. Sao
+    medidas diferentes e nao devem ser somadas ou comparadas direto.
+
+REGRAS DA PASTA
+  - Nao edite nem renomeie os arquivos originais.
+  - Toda limpeza e feita pelos scripts em src/, com saida em data/processed.

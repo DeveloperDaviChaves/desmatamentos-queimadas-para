@@ -1,0 +1,43 @@
+LEIAME - FOCOS DE QUEIMADAS (BDQueimadas / INPE)
+=================================================
+
+FONTE
+  Programa Queimadas - INPE (BDQueimadas)
+  Link: https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas/#exportar-dados
+
+DATA DO DOWNLOAD
+  13/10/2026
+
+ARQUIVO(S) NESTA PASTA
+  bdqueimadas_2026-01-01_2026-10-13
+
+FORMATO
+  CSV exportado pelo site (formato Excel).
+  Separador: ,
+  Codificacao: utf-8-sig 
+  Separador decimal: . 
+
+FILTROS USADOS NO DOWNLOAD (tela "Exportar dados")
+  Continente: America do Sul
+  Pais: Brasil
+  Estado: Para
+  Municipios: todos
+  Data inicio (UTC): 01/01/2008
+  Data fim (UTC): 31/12/2025
+  Satelite: AQUA
+  Bioma: todos
+
+O QUE CADA LINHA REPRESENTA
+  Um foco de calor detectado por satelite em um instante. Nao e area
+  queimada nem incendio confirmado. Os horarios estao em UTC.
+
+LIMITACOES PARA A ANALISE
+  - Foco de calor mede ocorrencia de fogo, nao tamanho da area atingida.
+  - Um mesmo incendio pode gerar varios focos.
+  - O numero de focos tambem depende do satelite, do horario de passagem
+    e da cobertura de nuvens.
+  - So compare anos usando o mesmo satelite e o mesmo recorte geografico.
+
+REGRAS DA PASTA
+  - Nao edite nem renomeie os arquivos originais.
+  - Toda limpeza e feita pelos scripts em src/, com saida em data/processed.
