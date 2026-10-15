@@ -132,8 +132,12 @@ CREATE TABLE IF NOT EXISTS dw.dim_municipio (
     cod_ibge      INTEGER UNIQUE,
     nome          TEXT NOT NULL,
     uf            CHAR(2) NOT NULL,
+    area_km2      NUMERIC(12,3),     -- área do município (malha municipal)
     UNIQUE (nome, uf)
 );
+
+-- Para bancos criados antes desta coluna existir:
+ALTER TABLE dw.dim_municipio ADD COLUMN IF NOT EXISTS area_km2 NUMERIC(12,3);
 
 CREATE TABLE IF NOT EXISTS dw.fato_desmatamento_municipio (
     ano           SMALLINT NOT NULL REFERENCES dw.dim_tempo (ano),
@@ -165,17 +169,18 @@ LEFT JOIN dw.fato_queimadas_uf_prodes q ON q.ano_prodes = t.ano AND q.uf = 'PA'
 WHERE t.ano >= 2009   -- o PRODES 2008 exigiria focos de ago/2007 em diante (não baixados)
 ORDER BY t.ano;
 
+-- Painel município x ano PRODES (todas as combinações, com 0 quando não há registro).
+-- Em fato_queimadas_municipio, a coluna "ano" é o ano PRODES (ago/(N-1) a jul/N).
 CREATE OR REPLACE VIEW dw.vw_comparativo_municipio_ano AS
 SELECT
     m.nome                   AS municipio,
-    ano,
+    t.ano,
     COALESCE(d.area_km2, 0)  AS area_desmatada_km2,
-    COALESCE(q.qtd_focos, 0) AS qtd_focos
-FROM (
-    SELECT ano, id_municipio FROM dw.fato_desmatamento_municipio
-    UNION
-    SELECT ano, id_municipio FROM dw.fato_queimadas_municipio
-) k
-JOIN dw.dim_municipio m USING (id_municipio)
-LEFT JOIN dw.fato_desmatamento_municipio d USING (ano, id_municipio)
-LEFT JOIN dw.fato_queimadas_municipio    q USING (ano, id_municipio);
+    COALESCE(q.qtd_focos, 0) AS qtd_focos,
+    m.cod_ibge,
+    m.area_km2               AS area_municipio_km2
+FROM dw.dim_municipio m
+CROSS JOIN dw.dim_tempo t
+LEFT JOIN dw.fato_desmatamento_municipio d ON d.id_municipio = m.id_municipio AND d.ano = t.ano
+LEFT JOIN dw.fato_queimadas_municipio    q ON q.id_municipio = m.id_municipio AND q.ano = t.ano
+WHERE t.ano >= 2009;
