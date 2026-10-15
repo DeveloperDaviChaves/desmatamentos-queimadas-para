@@ -1,1 +1,6 @@
-requirements.txt
+pandas
+sqlalchemy
+psycopg2-binary
+geopandas
+matplotlib
+ipykernel
