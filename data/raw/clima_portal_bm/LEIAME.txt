@@ -1,0 +1,29 @@
+LEIAME - CLIMA (PORTAL DO BANCO MUNDIAL)
+========================================
+
+FONTE
+  Banco Mundial, Climate Change Knowledge Portal (CCKP)
+  https://climateknowledgeportal.worldbank.org/
+  Citar como: World Bank, Climate Change Knowledge Portal. Data de acesso: [PREENCHER].
+
+ARQUIVOS NESTA PASTA
+  oni_mensal.csv
+    Indice Nino Oceanico (ONI) mensal, 1950 a 2026 (colunas Date, ONI value, ONI Type).
+    Fonte: pagina ENSO (ERA5) do portal. Data do download: [PREENCHER].
+  chuva_era5_para_mensal.json   (original: BRA.json)
+    Precipitacao mensal (mm), ERA5 0,25 grau, serie temporal, 1950-01 a 2025-12,
+    unidade subnacional BRA.37678. O arquivo traz so o codigo da unidade.
+    [CONFIRMAR no portal que BRA.37678 corresponde ao Para.]
+    Data do download: [PREENCHER].
+
+NAO USADO NO PROJETO
+  era5-x0_25_climatology_..._1991-2020_mean...xlsx: climatologia (ciclo medio de
+  1991-2020) do Brasil inteiro, e nao serie temporal do Para. Pode ser apagado.
+
+LIMITACOES
+  - A chuva e a media do estado em grade de 0,25 grau; nao captura condicoes locais.
+  - O portal recomenda comparar a precipitacao do ERA5 com outros conjuntos de dados.
+  - Os valores do ONI podem ser revisados pelo orgao de origem; registre a data do download.
+
+REGRAS DA PASTA
+  - Nao edite os arquivos originais.

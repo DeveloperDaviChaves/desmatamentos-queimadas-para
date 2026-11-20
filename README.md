@@ -27,12 +27,14 @@ Malha municipal      ─┘          (cruzamento espacial por município)
 │   ├── raw/
 │   │   ├── queimadas_bdqueimadas/   # CSVs por ano + LEIAME.txt
 │   │   ├── desmatamento_prodes/     # shapefile (.shp/.shx/.dbf/.prj) + LEIAME.txt
-│   │   └── malha_municipal/         # malha dos municípios do Pará + LEIAME.txt
+│   │   ├── malha_municipal/         # malha dos municípios do Pará + LEIAME.txt
+│   │   └── clima_portal_bm/         # ONI e chuva mensal (portal do Banco Mundial) + LEIAME.txt
 │   └── processed/
 ├── figuras/                         # gráficos gerados pelos notebooks
 ├── notebooks/
 │   ├── graficos_comparativos.ipynb  # comparativo do estado por ano
-│   └── analise_municipal.ipynb      # análise por município e mapas
+│   ├── analise_municipal.ipynb      # análise por município e mapas
+│   └── analise_hipoteses.ipynb      # seca, ENSO e o salto de 2017
 ├── sql/
 │   └── schema_desmatamento_queimadas.sql
 ├── src/
@@ -40,7 +42,8 @@ Malha municipal      ─┘          (cruzamento espacial por município)
 │   ├── inspecionar_prodes.py        # inspeção dos atributos do shapefile
 │   ├── cargas_desmatamento.py       # shapefile -> raw -> stg -> dw
 │   ├── inspecionar_malha.py         # inspeção da malha municipal
-│   └── cargas_municipais.py         # cruzamento com a malha -> dw (por município)
+│   ├── cargas_municipais.py         # cruzamento com a malha -> dw (por município)
+│   └── chuva_chirps.py              # chuva mensal do CHIRPS por município e para o estado
 ├── pyproject.toml
 └── README.md
 ```
@@ -66,6 +69,7 @@ Se a senha tiver caracteres especiais, codifique-os na URL (por exemplo, `@` vir
 - **Queimadas:** baixe em [BDQueimadas](https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas/#exportar-dados) com país Brasil, estado Pará, o mesmo satélite em todos os anos (aqui, AQUA_M-T) e início em 01/01/2008. Salve um CSV por ano em `data/raw/queimadas_bdqueimadas/`, com nomes como `queimadas_2008.csv`.
 - **Desmatamento:** baixe o shapefile do PRODES no [TerraBrasilis](https://terrabrasilis.dpi.inpe.br/) e coloque os quatro arquivos juntos em `data/raw/desmatamento_prodes/`.
 - **Malha municipal:** coloque o shapefile dos municípios do Pará (`PA_Municipios_2025`) em `data/raw/malha_municipal/`.
+- **Clima:** do [Portal de Conhecimento sobre Mudanças Climáticas](https://climateknowledgeportal.worldbank.org/) (Banco Mundial), baixe em "Baixar dados" a série temporal mensal de chuva (ERA5) do Pará e o ONI, e salve em `data/raw/clima_portal_bm/`.
 
 **5. Execução** (sempre da raiz do projeto, nesta ordem)
 ```
@@ -74,6 +78,7 @@ uv run python src/inspecionar_prodes.py     # opcional: conferir classes e anos
 uv run python src/cargas_desmatamento.py
 uv run python src/inspecionar_malha.py      # opcional: conferir a malha
 uv run python src/cargas_municipais.py
+uv run python src/chuva_chirps.py           # opcional: chuva do CHIRPS (baixa um arquivo global por mês)
 ```
 Os scripts criam o esquema a partir de `sql/schema_desmatamento_queimadas.sql` e podem ser repetidos: cada execução refaz as tabelas. Os de desmatamento e de municípios imprimem conferências de totais ao final.
 
@@ -166,12 +171,26 @@ Comparação dos incrementos anuais de desmatamento do Pará: nossa tabela (`dw.
 | Anapu | 1.495,6 | 12,6% | 8.196 | 5,5 |
 | Senador José Porfírio | 1.339,2 | 9,3% | 6.475 | 4,8 |
 
-- **Concentração:** 10 dos 144 municípios reúnem 57% do desmatamento do estado no período (cerca de 67% com os 15 maiores) e cerca de 39% dos focos.
-- **Entre municípios:** a correlação de Spearman entre desmatamento e focos acumulados é de +0,88 (n = 143). Esse número mistura relação com tamanho do município, porque municípios grandes têm mais de tudo; ele não deve ser lido como prova de que o desmatamento causa fogo.
-- **Dentro de cada município, ao longo dos anos:** entre os 15 maiores, a correlação de Spearman vai de +0,60 (Novo Repartimento) a −0,33 (Rurópolis); 11 são positivas ou próximas de zero e 4 são negativas. Com 17 anos por município, só valores acima de cerca de 0,5 se distinguem do acaso, e isso vale para poucos municípios.
+- **Concentração:** 10 dos 144 municípios reúnem 56,8% do desmatamento do estado no período (cerca de 67% com os 15 maiores) e 39,1% dos focos.
+- **Entre municípios, em totais:** a correlação de Spearman entre desmatamento e focos acumulados é de +0,88 (n = 143). Esse número mistura relação com tamanho do município, porque municípios grandes têm mais de tudo.
+- **Entre municípios, em proporção ao território:** comparando o percentual da área desmatada com os focos por 100 km², o Spearman cai para +0,42 (n = 143). É uma associação moderada, bem acima do que o acaso produziria com 143 municípios, mas que explica só uma parte da variação (cerca de 18% em postos) e não prova relação de causa.
+- **Dentro de cada município, ao longo dos anos:** entre os 15 maiores, a correlação de Spearman vai de +0,60 (Novo Repartimento) a −0,33 (Rurópolis); 11 são positivas ou próximas de zero e 4 são negativas. Com 17 anos por município, só valores acima de cerca de 0,5 se distinguem do acaso, e isso vale para poucos municípios. Juntando todos os 144 municípios, com cada série padronizada pelo próprio município, a correlação é de +0,21 (fraca).
+- **Leitura conjunta:** a relação aparece mais no espaço do que no tempo. Onde há proporcionalmente mais desmatamento, há mais focos por km² (+0,42); ao longo dos anos, dentro de cada município, ela é fraca (+0,21); e nos totais anuais do estado ela é fraca e levemente negativa (−0,27). Uma hipótese é que os totais anuais do estado são muito influenciados por fatores que variam de um ano para outro, como o clima, mas isso não foi testado.
 - **Mapas:** o desmatamento acumulado se concentra no centro-sul do estado, enquanto os focos por 100 km² de território são mais altos no nordeste paraense, onde há muitos municípios pequenos e pouco desmatamento novo. Isso sugere fogo com outras origens, mas essa é uma hipótese que os dados não testam.
 
 Os gráficos estão em `figuras/`.
+
+## Resultados: hipóteses
+
+Todos os testes usam os 17 anos PRODES de 2009 a 2025. Com 17 anos, só correlações acima de cerca de 0,49 em módulo se distinguem do acaso. Nos testes de chuva e de ENSO, a janela (agosto a novembro do ano anterior ao ano PRODES) e a direção esperada foram definidas antes de ver os resultados.
+
+- **Chuva da estação seca:** com a chuva mensal do ERA5 (unidade `BRA.37678` do portal, correspondente ao Pará), o Spearman entre focos e chuva de agosto a novembro é **−0,66** (−0,76 sem 2011 e 2025, n = 15). Os três períodos mais secos (agosto a novembro de 2015, 2023 e 2024) viraram anos PRODES de 45 mil, 43 mil e 53 mil focos, todos acima da mediana (37,5 mil). A chuva não tem relação com a área desmatada (+0,05), e controlar a chuva deixa a relação entre área e focos praticamente igual (−0,07, contra −0,09). A conferência com a chuva do CHIRPS (satélite e estações, grade de 0,05°) dá resultado parecido: Spearman de **−0,70** (n = 17), e as duas fontes de chuva concordam entre si (+0,91).
+- **ENSO:** o ONI médio de agosto a novembro do ano anterior não mostra relação com os focos (−0,03) nem com a área desmatada (−0,02). Os dois anos de mais focos, 2011 e 2025, vieram com ONI de −1,44 e −0,16.
+- **Indicadores do INPE (risco de fogo e dias sem chuva dos focos):** só existem de 2015 em diante, e os resultados foram inconclusivos (+0,60 e +0,16, com n = 12, incluindo 2014, que tem dado em só 7% dos focos). O notebook refaz o teste só com anos bem cobertos.
+- **FRP:** o FRP médio dos focos tem correlação de +0,64 com a área desmatada (n = 17). É uma pista exploratória, entre vários coeficientes calculados.
+- **Salto de 2017:** os cinco dias mais intensos concentram 13,7% dos focos do ano, dentro da faixa dos demais anos (9% a 18,5%), e a curva diária mostra um episódio de várias semanas, não um dia anômalo. Isso não exclui um problema de processamento; a conferência com outro satélite está pendente.
+
+**Síntese:** ao longo dos anos, os focos no Pará acompanham a chuva da estação seca, e não a área desmatada no ano. Entre municípios, onde há proporcionalmente mais desmatamento há mais focos por km². São leituras correlacionais, e não provam relação de causa.
 
 ## Limitações
 
@@ -181,15 +200,19 @@ Os gráficos estão em `figuras/`.
 - Com 17 anos, os coeficientes de correlação descrevem estes dados; não demonstram relação de causa.
 - A malha municipal é a de 2025 e vale para todos os anos: municípios criados ou alterados na série ficam com os limites atuais.
 - Na atribuição por município, um polígono do PRODES que atravessa a divisa conta inteiro para um só município.
-- 2017 tem um salto nos focos em relação a 2016 e 2018 que ainda não foi investigado.
+- 2017 tem um salto nos focos em relação a 2016 e 2018 que ainda não foi explicado.
+- A chuva é a média do estado (ERA5 em grade de 0,25° e CHIRPS em 0,05°) e não captura condições locais. As duas fontes concordam entre si (+0,91), mas ambas são estimativas, e não medições de estações.
 
 ## Próximos passos
 
-- Registrar o resultado da comparação entre municípios em proporção ao tamanho (percentual do território desmatado contra focos por 100 km²), que descarta o efeito do tamanho.
-- Testar a hipótese de seca usando `DiaSemChuva`, `RiscoFogo` e `FRP`.
-- Investigar o salto de focos em 2017.
+- Repetir o teste da chuva por município, com o CSV municipal do CHIRPS (144 municípios por 17 anos).
+- Comparar 2017 com outro satélite do BDQueimadas.
+- Testar a intensidade do fogo (FRP) por município e cruzar os focos com os polígonos do PRODES.
+- Fechar a estação de 2026 (ONI em alta) como teste fora da amostra.
 
 ## Fontes
 
 - INPE, PRODES (TerraBrasilis): <https://terrabrasilis.dpi.inpe.br/>
 - INPE, Programa Queimadas (BDQueimadas): <https://terrabrasilis.dpi.inpe.br/queimadas/bdqueimadas/>
+- Banco Mundial, Climate Change Knowledge Portal (ERA5 e ONI): <https://climateknowledgeportal.worldbank.org/>
+- Climate Hazards Center (UCSB), CHIRPS: <https://data.chc.ucsb.edu/products/CHIRPS-2.0/>
